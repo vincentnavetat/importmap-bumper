@@ -1,3 +1,5 @@
+require_relative "lib/importmap_bumper/version"
+
 Gem::Specification.new do |spec|
   spec.name        = "importmap-bumper"
   spec.version     = ImportmapBumper::VERSION
