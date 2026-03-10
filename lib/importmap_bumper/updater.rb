@@ -4,6 +4,7 @@ module ImportmapBumper
   class Updater
     def run
       @default_branch = default_branch
+      ensure_git_identity
 
       outdated = outdated_packages
 
@@ -112,6 +113,18 @@ module ImportmapBumper
     def discard_branch(branch)
       run!("git", "checkout", @default_branch)
       run!("git", "branch", "-D", branch)
+    end
+
+    def ensure_git_identity
+      return if git_config_get("user.name") && git_config_get("user.email")
+
+      run!("git", "config", "user.name", ENV.fetch("IMPORTMAP_BUMPER_GIT_USER_NAME", "importmap-bumper"))
+      run!("git", "config", "user.email", ENV.fetch("IMPORTMAP_BUMPER_GIT_USER_EMAIL", "importmap-bumper@users.noreply.github.com"))
+    end
+
+    def git_config_get(key)
+      out, status = Open3.capture2("git", "config", "--get", key)
+      status.success? ? out.strip : nil
     end
 
     def default_branch
