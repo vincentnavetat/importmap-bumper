@@ -116,10 +116,15 @@ module ImportmapBumper
 
     def default_branch
       stdout, status = Open3.capture2("git", "symbolic-ref", "refs/remotes/origin/HEAD")
+      return stdout.strip.split("/").last if status.success?
 
-      abort "Unable to determine default branch" unless status.success?
+      # Shallow/clone environments (e.g. GitHub Actions) often don't set origin/HEAD
+      %w[main master].each do |branch|
+        out, status = Open3.capture2("git", "rev-parse", "--verify", "origin/#{branch}")
+        return branch if status.success? && !out.strip.empty?
+      end
 
-      stdout.strip.split("/").last
+      abort "Unable to determine default branch (tried symbolic-ref and origin/main, origin/master)"
     end
 
     def clean_worktree?
